@@ -1,0 +1,6 @@
+{
+  "name": "Grandmaster Vault",
+  "description": "Competitive Programming Encyclopedia, Multi-Platform Practice Hub, and Algorithm-to-Project Builder spanning 800 to 3300+ rating.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,445 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --gv-bg: #0B0C0E;
+    --gv-surface: #13151A;
+    --gv-surface-elevated: #191C23;
+    --gv-border: rgba(255, 255, 255, 0.08);
+    --gv-border-strong: rgba(255, 255, 255, 0.14);
+    --gv-text: #E5E7EB;
+    --gv-muted: #94A3B8;
+    --gv-accent: #F59E0B;
+  }
+
+  html {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--gv-bg);
+    color: var(--gv-text);
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.015em;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Custom subtle scrollbars for code panes and drawers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0C0E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #272B36;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3B4152;
+}
+
+/* ==========================================================================
+   1. INFINITE HORIZONTAL TICKER KEYFRAMES
+   ========================================================================== */
+@keyframes gv-ticker-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.gv-ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: gv-ticker-scroll 68s linear infinite;
+}
+
+.gv-notice-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: gv-ticker-scroll 54s linear infinite;
+}
+
+.gv-ticker-wrapper:hover .gv-ticker-track,
+.gv-notice-wrapper:hover .gv-notice-track,
+.gv-ticker-paused {
+  animation-play-state: paused !important;
+}
+
+/* ==========================================================================
+   2. SIGNATURE MOTION & DOMAIN-SPECIFIC VISUAL FX KEYFRAMES (60FPS GPU)
+   ========================================================================== */
+
+/* View & Tab Entrance (180ms fade-and-rise) */
+@keyframes gv-view-enter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.gv-view-enter {
+  animation: gv-view-enter 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Linear-Style Rotating Border Beam */
+@keyframes border-beam-spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.gv-border-beam-rotor {
+  animation: border-beam-spin 7s linear infinite;
+  will-change: transform;
+}
+
+/* Hero Headline Shimmer Gold Gradient */
+@keyframes gv-shimmer-gold {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gv-shimmer-gold-text {
+  background: linear-gradient(
+    90deg,
+    #FDE68A 0%,
+    #F59E0B 30%,
+    #FFFBEB 50%,
+    #D97706 70%,
+    #FDE68A 100%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gv-shimmer-gold 6s ease-in-out infinite;
+}
+
+/* Step-by-Step Trace Player Amber Mutation Pulse */
+@keyframes trace-pulse {
+  0% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.65);
+  }
+  45% {
+    transform: scale(1.03);
+    box-shadow: 0 0 18px 4px rgba(245, 158, 11, 0.38);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.gv-trace-pulse {
+  animation: trace-pulse 460ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Copy Button Emerald Ring Ripple */
+@keyframes gv-copy-ripple {
+  0% {
+    transform: scale(0.85);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
+  }
+  60% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 7px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.gv-copy-ripple {
+  animation: gv-copy-ripple 480ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Pattern Drill: Correct Answer Emerald Glow Pulse & Wrong Answer Micro-Shake */
+@keyframes gv-pulse-correct {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 28px 6px rgba(16, 185, 129, 0.28);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.gv-pulse-correct {
+  animation: gv-pulse-correct 640ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gv-shake-wrong {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-6px, 0, 0);
+  }
+  40% {
+    transform: translate3d(6px, 0, 0);
+  }
+  60% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  80% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+.gv-shake-wrong {
+  animation: gv-shake-wrong 380ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Roadmap SVG Dashed Energy Flow Lines */
+@keyframes gv-energy-dash {
+  0% {
+    stroke-dashoffset: 36;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.gv-energy-flow-line {
+  animation: gv-energy-dash 1.8s linear infinite;
+}
+
+/* Domain 1 (Data Structures): Orthogonal Grid Beams */
+@keyframes gv-grid-beam-x {
+  0% {
+    transform: translate3d(-120%, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(420%, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes gv-grid-beam-y {
+  0% {
+    transform: translate3d(0, -120%, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(0, 340%, 0);
+    opacity: 0;
+  }
+}
+
+.gv-beam-x-1 {
+  animation: gv-grid-beam-x 6.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.gv-beam-x-2 {
+  animation: gv-grid-beam-x 8.2s cubic-bezier(0.4, 0, 0.2, 1) 2.4s infinite;
+}
+
+.gv-beam-y-1 {
+  animation: gv-grid-beam-y 7.4s cubic-bezier(0.4, 0, 0.2, 1) 1.1s infinite;
+}
+
+.gv-beam-y-2 {
+  animation: gv-grid-beam-y 9.1s cubic-bezier(0.4, 0, 0.2, 1) 3.7s infinite;
+}
+
+/* Domain 2 (Search, Greedy & DP): Flowing Aurora State Mesh */
+@keyframes gv-aurora-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(28px, -14px, 0) scale(1.07);
+  }
+  66% {
+    transform: translate3d(-22px, 12px, 0) scale(0.95);
+  }
+}
+
+.gv-aurora-blob-1 {
+  animation: gv-aurora-drift 11s ease-in-out infinite;
+}
+
+.gv-aurora-blob-2 {
+  animation: gv-aurora-drift 14s ease-in-out 2s infinite reverse;
+}
+
+/* Domain 4 (Math, Number Theory & Algebra): Floating Algebra Lattice */
+@keyframes gv-glyph-float {
+  0%, 100% {
+    transform: translate3d(0, 10px, 0);
+    opacity: 0.16;
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+    opacity: 0.55;
+  }
+}
+
+.gv-glyph-float {
+  animation: gv-glyph-float 7s ease-in-out infinite;
+}
+
+/* Domain 5 (Strings & Geometry): Laser Sweep Scanner */
+@keyframes gv-laser-sweep {
+  0% {
+    transform: translate3d(0, -10%, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.75;
+  }
+  85% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(0, 190px, 0);
+    opacity: 0;
+  }
+}
+
+.gv-laser-line {
+  animation: gv-laser-sweep 6.4s ease-in-out infinite;
+}
+
+/* Domain 6 (Theoretical & Randomized): Diagonal Meteor Shower */
+@keyframes gv-meteor-streak {
+  0% {
+    transform: rotate(215deg) translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.95;
+  }
+  75% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: rotate(215deg) translate3d(-440px, 0, 0);
+    opacity: 0;
+  }
+}
+
+.gv-meteor {
+  animation: gv-meteor-streak 4.8s linear infinite;
+}
+
+/* Contest Lab CRT Terminal Cursor & Scanlines */
+@keyframes gv-crt-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+.gv-crt-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background-color: #F59E0B;
+  vertical-align: middle;
+  margin-left: 4px;
+  animation: gv-crt-blink 1s steps(1) infinite;
+}
+
+.gv-crt-scanlines {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+}
+
+/* Reduced Motion & User FX Toggle Compliance */
+@media (prefers-reduced-motion: reduce) {
+  .gv-ticker-track,
+  .gv-notice-track,
+  .gv-border-beam-rotor,
+  .gv-shimmer-gold-text,
+  .gv-beam-x-1,
+  .gv-beam-x-2,
+  .gv-beam-y-1,
+  .gv-beam-y-2,
+  .gv-aurora-blob-1,
+  .gv-aurora-blob-2,
+  .gv-glyph-float,
+  .gv-laser-line,
+  .gv-meteor,
+  .gv-energy-flow-line,
+  .gv-crt-cursor {
+    animation: none !important;
+  }
+}
+
+html.gv-reduced-fx .gv-border-beam-rotor,
+html.gv-reduced-fx .gv-shimmer-gold-text,
+html.gv-reduced-fx .gv-beam-x-1,
+html.gv-reduced-fx .gv-beam-x-2,
+html.gv-reduced-fx .gv-beam-y-1,
+html.gv-reduced-fx .gv-beam-y-2,
+html.gv-reduced-fx .gv-aurora-blob-1,
+html.gv-reduced-fx .gv-aurora-blob-2,
+html.gv-reduced-fx .gv-glyph-float,
+html.gv-reduced-fx .gv-laser-line,
+html.gv-reduced-fx .gv-meteor,
+html.gv-reduced-fx .gv-energy-flow-line {
+  animation: none !important;
+}
