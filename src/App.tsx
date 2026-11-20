@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Shield } from 'lucide-react';
+import { AuthGate } from './components/AuthGate';
 import { AuthModal } from './components/AuthModal';
 import { CmsDrawerModal } from './components/CmsDrawerModal';
 import { CommandSearchModal } from './components/CommandSearchModal';
+import { ContestLabView } from './components/ContestLabView';
 import { FxProvider } from './components/fx/FxProvider';
+import { PatternDrillView } from './components/PatternDrillView';
 import { TopBar } from './components/TopBar';
 import { TopTickerBar } from './components/TopTickerBar';
 import { WorkspaceToolbar } from './components/WorkspaceToolbar';
@@ -19,6 +23,8 @@ import {
   loadCustomEntries,
   loadUserProgress,
   saveUserProgress,
+  signOutUser,
+  subscribeToAuthChanges,
   upsertCustomEntry,
 } from './lib/supabase';
 import type {
@@ -30,8 +36,6 @@ import type {
   UsacoDivision,
   UserProgressState,
 } from './types/vault';
-import { ContestLabView } from './components/ContestLabView';
-import { PatternDrillView } from './components/PatternDrillView';
 import { LanguagesView } from './views/LanguagesView';
 import { PlaybookView } from './views/PlaybookView';
 import { RoadmapView } from './views/RoadmapView';
@@ -60,6 +64,7 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [cmsOpen, setCmsOpen] = useState(false);
 
+  const [authInitializing, setAuthInitializing] = useState(true);
   const [session, setSession] = useState<AuthSessionState>({
     email: null,
     userId: null,
@@ -70,22 +75,40 @@ export default function App() {
   const [progress, setProgress] = useState<UserProgressState>(DEFAULT_PROGRESS);
   const [customEntries, setCustomEntries] = useState<CustomCmsEntry[]>([]);
 
-  // Initial hydration from Supabase or localStorage fallback
+  const isAuthenticated = Boolean(session.email || session.isDemoAdmin);
+
+  // Initial hydration from Supabase or localStorage fallback (Zero Content Flash)
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const s = await getSessionState();
-      const [prog, custom] = await Promise.all([
-        loadUserProgress(s.userId),
-        loadCustomEntries(),
-      ]);
-      if (!mounted) return;
-      setSession(s);
-      setProgress(prog);
-      setCustomEntries(custom);
+      try {
+        const s = await getSessionState();
+        const [prog, custom] = await Promise.all([
+          loadUserProgress(s.userId),
+          loadCustomEntries(),
+        ]);
+        if (!mounted) return;
+        setSession(s);
+        setProgress(prog);
+        setCustomEntries(custom);
+      } finally {
+        if (mounted) {
+          setAuthInitializing(false);
+        }
+      }
     })();
+
+    const unsubscribe = subscribeToAuthChanges((nextSession) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      void loadUserProgress(nextSession.userId).then((prog) => {
+        if (mounted) setProgress(prog);
+      });
+    });
+
     return () => {
       mounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -96,8 +119,9 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  // Global Ctrl+K / Cmd+K instant search shortcut
+  // Global Ctrl+K / Cmd+K instant search shortcut (active only when authenticated)
   useEffect(() => {
+    if (!isAuthenticated || authInitializing) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -106,7 +130,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [isAuthenticated, authInitializing]);
 
   const navigate = useCallback((path: string) => {
     const next = normalizePath(path);
@@ -230,6 +254,14 @@ export default function App() {
     setProgress(prog);
   };
 
+  const handleSignOut = async () => {
+    setAuthOpen(false);
+    setCmsOpen(false);
+    setSearchOpen(false);
+    const clearedSession = await signOutUser();
+    setSession(clearedSession);
+  };
+
   // Route dispatch
   const renderView = () => {
     if (currentPath === '/' || currentPath === '/roadmap') {
@@ -321,6 +353,39 @@ export default function App() {
     );
   };
 
+  // 1. Zero Content Flash on Reload while verifying initial session
+  if (authInitializing) {
+    return (
+      <FxProvider>
+        <div className="min-h-screen w-full bg-[#06070A] text-[#E5E7EB] flex flex-col items-center justify-center p-6 select-none">
+          <div className="relative flex flex-col items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl border border-amber-500/40 bg-amber-500/10 flex items-center justify-center shadow-[0_0_32px_rgba(245,158,11,0.25)] animate-pulse">
+              <Shield className="w-6 h-6 text-amber-400" />
+            </div>
+            <div className="text-center space-y-1">
+              <div className="font-mono text-xs font-semibold tracking-wider text-amber-300">
+                Verifying Vault Session...
+              </div>
+              <div className="font-mono text-[11px] text-slate-500">
+                GRANDMASTER VAULT
+              </div>
+            </div>
+          </div>
+        </div>
+      </FxProvider>
+    );
+  }
+
+  // 2. Strict Mandatory Full-Screen Auth Gate when unauthenticated
+  if (!isAuthenticated) {
+    return (
+      <FxProvider>
+        <AuthGate onSessionAuthenticated={handleSessionChange} />
+      </FxProvider>
+    );
+  }
+
+  // 3. Authenticated Grandmaster Vault Workspace
   return (
     <FxProvider>
       <div className="min-h-screen flex flex-col bg-[#0B0C0E] text-[#E5E7EB]">
@@ -334,6 +399,7 @@ export default function App() {
           onNavigate={navigate}
           session={session}
           onOpenAuth={() => setAuthOpen(true)}
+          onSignOut={handleSignOut}
         />
 
         <WorkspaceToolbar

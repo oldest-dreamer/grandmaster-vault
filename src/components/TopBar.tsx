@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, Sparkles, X } from 'lucide-react';
+import { LogOut, Menu, Sparkles, X } from 'lucide-react';
 import type { AuthSessionState } from '../types/vault';
 import { useFxMode } from './fx/FxProvider';
 
@@ -8,6 +8,7 @@ interface TopBarProps {
   onNavigate: (path: string) => void;
   session: AuthSessionState;
   onOpenAuth: () => void;
+  onSignOut: () => void;
 }
 
 const NAV_ITEMS = [
@@ -25,6 +26,7 @@ export function TopBar({
   onNavigate,
   session,
   onOpenAuth,
+  onSignOut,
 }: TopBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isFullFx, toggleFxMode } = useFxMode();
@@ -34,11 +36,7 @@ export function TopBar({
     return currentPath === itemPath || currentPath.startsWith(`${itemPath}/`);
   };
 
-  const actionLabel = session.isAdmin
-    ? 'Admin Session'
-    : session.email
-      ? 'Account'
-      : 'Sign In';
+  const actionLabel = session.isAdmin ? 'Admin Session' : 'Account';
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B0C0E]/95 backdrop-blur-sm">
@@ -83,8 +81,8 @@ export function TopBar({
           })}
         </nav>
 
-        {/* Zone 3: FX Motion Toggle + Primary Account Action */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* Zone 3: FX Motion Toggle + Session Drawer + Instant Sign Out */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={toggleFxMode}
@@ -113,9 +111,20 @@ export function TopBar({
           <button
             type="button"
             onClick={onOpenAuth}
-            className="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-500 text-zinc-950 hover:bg-amber-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-500 text-zinc-950 hover:bg-amber-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
             {actionLabel}
+          </button>
+
+          <button
+            type="button"
+            onClick={onSignOut}
+            title="Sign Out and Lock Vault"
+            aria-label="Sign Out and Lock Vault"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-mono font-medium rounded-lg border border-white/10 bg-[#13151A] text-slate-300 hover:text-rose-300 hover:border-rose-500/40 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Sign Out</span>
           </button>
 
           <button

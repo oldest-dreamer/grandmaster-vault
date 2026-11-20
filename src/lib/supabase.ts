@@ -178,9 +178,9 @@ export async function signInWithEmailPassword(
     };
   }
 
-  if (!email.includes('@') || password.length < 4) {
+  if (!email.includes('@') || password.length < 6) {
     return {
-      error: 'Enter a valid email and password (minimum 4 characters).',
+      error: 'Enter a valid email and password (minimum 6 characters).',
       session: await getSessionState(),
     };
   }
@@ -202,18 +202,40 @@ export async function signInWithEmailPassword(
 export async function signUpWithEmailPassword(
   email: string,
   password: string,
-): Promise<{ error: string | null; session: AuthSessionState }> {
+): Promise<{
+  error: string | null;
+  requiresEmailConfirmation?: boolean;
+  session: AuthSessionState;
+}> {
+  if (!email.includes('@') || password.length < 6) {
+    return {
+      error: 'Enter a valid email and a password of at least 6 characters.',
+      session: await getSessionState(),
+    };
+  }
+
   if (supabase) {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       return { error: error.message, session: await getSessionState() };
     }
-    const userEmail = data.user?.email ?? null;
+
+    // If Supabase requires email confirmation, data.session will be null
+    if (!data.session) {
+      return {
+        error: null,
+        requiresEmailConfirmation: true,
+        session: await getSessionState(),
+      };
+    }
+
+    const userEmail = data.session.user?.email ?? data.user?.email ?? null;
     return {
       error: null,
+      requiresEmailConfirmation: false,
       session: {
         email: userEmail,
-        userId: data.user?.id ?? null,
+        userId: data.session.user?.id ?? data.user?.id ?? null,
         isAdmin: userEmail?.toLowerCase() === ADMIN_EMAIL.toLowerCase(),
         isDemoAdmin: false,
         mode: 'supabase',
@@ -222,6 +244,31 @@ export async function signUpWithEmailPassword(
   }
 
   return signInWithEmailPassword(email, password);
+}
+
+export function subscribeToAuthChanges(
+  onChange: (session: AuthSessionState) => void,
+): () => void {
+  if (!supabase) {
+    return () => {};
+  }
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, supaSession) => {
+    const user = supaSession?.user ?? null;
+    const email = user?.email ?? null;
+    onChange({
+      email,
+      userId: user?.id ?? null,
+      isAdmin: email?.toLowerCase() === ADMIN_EMAIL.toLowerCase(),
+      isDemoAdmin: false,
+      mode: 'supabase',
+    });
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
 }
 
 export async function toggleDemoAdminMode(
